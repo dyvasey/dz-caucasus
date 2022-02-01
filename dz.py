@@ -109,7 +109,7 @@ class DZSample:
         
         return(self.bestage)
     
-    def kde(self,ax=None,log_scale=True,add_n=True,xaxis=True,
+    def kde(self,ax=None,log_scale=True,add_n=True,xaxis=True,bw_adjust=0.2,
             **kwargs):
         """
         Plot KDE via Seaborn using best age.
@@ -127,7 +127,8 @@ class DZSample:
             ax = plt.gca()
             
         sns.kdeplot(self.bestage,log_scale=log_scale,label=self.name,
-                    ax=ax,shade=True,color=self.color,**kwargs)
+                    ax=ax,shade=True,color=self.color,bw_adjust=bw_adjust,
+                    **kwargs)
         
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
