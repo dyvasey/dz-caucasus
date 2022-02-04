@@ -3,11 +3,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - ipykernel
   - matplotlib
-  - jupyter
-  - geopandas
   - pandas
+  - geopandas
   - seaborn
   - numpy
-  - openpyxl
 prefix: C:\Users\dyvas\miniconda3\envs\dz-leslie
