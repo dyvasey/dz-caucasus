@@ -1,7 +1,4 @@
-name: dz-leslie
-channels:
-  - conda-forge
-  - defaults
+name: dz
 dependencies:
   - ipykernel
   - matplotlib
@@ -9,4 +6,3 @@ dependencies:
   - geopandas
   - seaborn
   - numpy
-prefix: C:\Users\dyvas\miniconda3\envs\dz-leslie
