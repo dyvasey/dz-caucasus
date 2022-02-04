@@ -1,0 +1,13 @@
+name: dz-leslie
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib
+  - jupyter
+  - geopandas
+  - pandas
+  - seaborn
+  - numpy
+  - openpyxl
+prefix: C:\Users\dyvas\miniconda3\envs\dz-leslie
