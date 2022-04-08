@@ -11,6 +11,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import geopandas as gpd
 
+from matplotlib.colors import cnames
+
+import botev
+
 class DZSample:
     """ Object to hold detrital zircon sample metadata and ages. """
     
@@ -40,7 +44,7 @@ class DZSample:
         
         return
 
-    def calc_discordance(self,col_238,col_207,cutoff=20,reverse_cutoff=-5,
+    def calc_discordance(self,col_238,col_207,cutoff=10,reverse_cutoff=-10,
                          age_cutoff=400):
         """
         Calculate discordance of 238U/206Pb and 207Pb/206Pb ages.
@@ -71,7 +75,7 @@ class DZSample:
         return(discordance,discard)    
 
     def calc_bestage(self,col_238,col_207,age_cutoff=900,filter_disc=True,
-                     disc_cutoff=20,reverse_cutoff=-5,disc_age_cutoff=400):
+                     disc_cutoff=10,reverse_cutoff=-10,disc_age_cutoff=400):
         """
         Determine best age from 238U/206Pb and 207Pb/206Pb ages.
         
@@ -109,7 +113,8 @@ class DZSample:
         
         return(self.bestage)
     
-    def kde(self,ax=None,log_scale=True,add_n=True,xaxis=True,bw_adjust=0.2,
+    def kde(self,ax=None,log_scale=True,add_n=True,xaxis=True,rug=True,
+            method='botev_r',
             **kwargs):
         """
         Plot KDE via Seaborn using best age.
@@ -119,21 +124,52 @@ class DZSample:
             log_scale: Whether to plot age on logarithmic scale
             add_n: Whether to add number of analyses to plot
             xaxis: Whether to show x axis labels
+            rug: Whether to add ticks to bottom of plot
+            method: Method for getting KDE bandwidth
         
         Returns:
             ax: Axes which KDE plotted
         """
         if ax == None:
             ax = plt.gca()
+        
+        # STD of sample
+        std = self.bestage.std()
+        
+        # Botev R script
+        if method=='botev_r':
+            bandwidth = botev.botev_r(self.bestage)
+            bw_method = bandwidth/std
+        
+        # Botev Python script - currently doesn't work
+        elif method=='botev_py':
+            print('Warning: Method may be unstable.')
+            grid,density,bandwidth = botev.py_kde(self.bestage)
+            bw_method = bandwidth/std
+            
+        elif method=='vermeesch':
+            bandwidth = botev.vermeesch_r(self.bestage)
+            bw_method = bandwidth/std
+            
+        # Use Seaborn default
+        else:
+            bw_method = 'scott'
             
         sns.kdeplot(self.bestage,log_scale=log_scale,label=self.name,
-                    ax=ax,shade=True,color=self.color,bw_adjust=bw_adjust,
-                    **kwargs)
+                    ax=ax,shade=True,color=self.color,
+                    bw_method=bw_method,**kwargs)
+        if rug == True:
+            sns.rugplot(self.bestage,ax=ax,height=-0.025,clip_on=False,
+                        color=self.color,expand_margins=False,
+                        linewidth=2)
         
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
         ax.get_yaxis().set_visible(False)
+        
+        ax.set_xticks([100,200,300,400,500,1000,2000,3000])
+        ax.set_xticklabels([100,200,300,400,500,1000,2000,3000])
         
         if add_n == True:
             text = 'n = ' + str(self.bestage.count())
@@ -144,7 +180,7 @@ class DZSample:
         
         return(ax)
     
-    def kde_img(self,log_scale=True,add_n=True,bw_adjust=0.2,xlim=(10,4000),
+    def kde_img(self,log_scale=True,add_n=True,method='botev_r',xlim=(10,4000),
                 **kwargs):
         """
         Save KDE as image file tied to dz object.
@@ -162,18 +198,21 @@ class DZSample:
         ax = fig.add_subplot(111)
         ax.set_xlim(xlim)
         
-        sns.kdeplot(self.bestage,log_scale=log_scale,label=self.name,
-                    ax=ax,shade=True,color=self.color,bw_adjust=bw_adjust,
-                    **kwargs).set(title=self.name)
+        self.kde(ax=ax,log_scale=log_scale,add_n=add_n,method=method,
+                 **kwargs)
         
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.get_yaxis().set_visible(False)
+        #sns.kdeplot(self.bestage,log_scale=log_scale,label=self.name,
+        #            ax=ax,shade=True,color=self.color,bw_adjust=bw_adjust,
+        #            **kwargs).set(title=self.name)
         
-        if add_n == True:
-            text = 'n = ' + str(self.bestage.count())
-            ax.text(0.02,0.5,text,transform=ax.transAxes,fontweight='bold')
+        #ax.spines['top'].set_visible(False)
+        #ax.spines['right'].set_visible(False)
+        #ax.spines['left'].set_visible(False)
+        #ax.get_yaxis().set_visible(False)
+        
+        #if add_n == True:
+        #    text = 'n = ' + str(self.bestage.count())
+        #    ax.text(0.02,0.5,text,transform=ax.transAxes,fontweight='bold')
         
         path = 'dz/'
         os.makedirs(path,exist_ok=True)
@@ -272,7 +311,7 @@ def composite(samples,name,color=None):
     
     return(comp)
 
-def load(filename):
+def load(filename,path='dz/'):
     """
     Load .dz file into DZ object.
     
@@ -282,7 +321,6 @@ def load(filename):
     Returns:
         dz: DZ object with loaded data.
     """
-    path = 'dz/'
     dz = pickle.load(open(path+filename,"rb"))
     
     return(dz)
@@ -304,6 +342,7 @@ def write_file(samples,filename):
     reported_age = []
     kde_path = []
     source = []
+    color = []
     
     for sample in samples:
         latitude.append(sample.latlon[0])
@@ -312,10 +351,13 @@ def write_file(samples,filename):
         reported_age.append(sample.reported_age)
         kde_path.append(sample.kde_path)    
         source.append(sample.source)
+        
+        color_hex = cnames[sample.color]
+        color.append(color_hex)
     
     geometry = gpd.points_from_xy(longitude,latitude)
     data = {'name':name,'reported_age':reported_age,
-            'kde_path':kde_path,'source':source}
+            'kde_path':kde_path,'source':source,'color':color}
     gdf = gpd.GeoDataFrame(data,geometry=geometry)
     
     gdf.to_file(filename,crs='EPSG:4326')
@@ -334,7 +376,7 @@ def load_all(path='dz/'):
     samples = []
     for file in os.listdir(path):
         if file.endswith('.dz'):
-            obj = load(file)
+            obj = load(file,path=path)
             samples.append(obj)
     
     return(samples)
