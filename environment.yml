@@ -12,4 +12,5 @@ dependencies:
   - seaborn
   - numpy
   - openpyxl
+  - rpy2
 prefix: C:\Users\dyvas\miniconda3\envs\dz-leslie
