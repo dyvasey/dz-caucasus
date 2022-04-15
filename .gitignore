@@ -6,6 +6,7 @@ __pycache__
 *.prj
 *.shx
 *.jpg
+*.pdf
 dz/
 catchments/
 modern_samples.csv
