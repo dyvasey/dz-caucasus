@@ -8,4 +8,5 @@ __pycache__
 *.jpg
 dz/
 catchments/
+modern_samples.csv
 ~$*
