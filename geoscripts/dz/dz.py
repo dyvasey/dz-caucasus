@@ -13,7 +13,7 @@ import geopandas as gpd
 
 from matplotlib.colors import cnames
 
-import botev
+from geoscripts.dz import botev
 
 class DZSample:
     """ Object to hold detrital zircon sample metadata and ages. """

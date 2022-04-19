@@ -11,3 +11,4 @@ dz/
 catchments/
 modern_samples.csv
 ~$*
+!geoscripts/dz
