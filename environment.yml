@@ -2,10 +2,11 @@ name: dz
 channels:
   - conda-forge
 dependencies:
+  - python=3.10.4
   - matplotlib
   - jupyter
   - geopandas
-  - pandas=1.4.2-py310h769672d_0
+  - pandas=1.4.2
   - cartopy
   - seaborn
   - numpy
