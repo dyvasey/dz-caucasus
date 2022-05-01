@@ -1,16 +1,13 @@
-name: dz-leslie
+name: dz
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - matplotlib
   - jupyter
   - geopandas
-  - pandas
-  - spyder
+  - pandas=1.4.2
   - cartopy
   - seaborn
   - numpy
   - openpyxl
   - rpy2
-prefix: C:\Users\dyvas\miniconda3\envs\dz-leslie
