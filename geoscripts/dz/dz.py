@@ -13,7 +13,7 @@ import geopandas as gpd
 
 from matplotlib.colors import cnames
 
-from geoscripts.dz import botev
+from geoscripts.dz import botev,mda
 
 class DZSample:
     """ Object to hold detrital zircon sample metadata and ages. """
@@ -64,17 +64,18 @@ class DZSample:
         """
         discordance = (
             1-(self.agedata[col_238]/self.agedata[col_207]))*100
-        self.agedata['Discordance'] = discordance
+        self.agedata.loc[:,'Discordance'] = discordance
         
         # Run filter
         discard = ((self.agedata[col_238]>age_cutoff) &
             ((discordance>cutoff) | (discordance<reverse_cutoff))
             )
-        self.agedata['Discard'] = discard
+        self.agedata.loc[:,'Discard'] = discard
         
         return(discordance,discard)    
 
-    def calc_bestage(self,col_238,col_207,age_cutoff=900,filter_disc=True,
+    def calc_bestage(self,col_238,col_207,err_238=None,err_207=None,
+                     age_cutoff=900,filter_disc=True,use_err=False,err_lev='2sig',
                      disc_cutoff=10,reverse_cutoff=-10,disc_age_cutoff=400):
         """
         Determine best age from 238U/206Pb and 207Pb/206Pb ages.
@@ -99,17 +100,27 @@ class DZSample:
         self.bestage = self.agedata[col_238].where(
             self.agedata[col_238]<age_cutoff,
             self.agedata[col_207])
-        
+            
         # Run discordance filter
         if filter_disc == True:
             discordance,discard = self.calc_discordance(
                 col_238,col_207,cutoff=disc_cutoff,
                 reverse_cutoff=reverse_cutoff,age_cutoff=disc_age_cutoff
                                                    )
-            self.bestage = self.bestage[~discard]  
-        
-        
+            self.bestage = self.bestage[~discard]
+            
         self.bestage.name = 'Best Age'
+        
+        if use_err == True:
+            self.besterror = self.agedata[err_238].where(
+                self.agedata[col_238]<age_cutoff,
+                self.agedata[err_207])
+            
+            if filter_disc == True:
+                self.besterror = self.besterror[~discard]
+            self.error_level = err_lev
+            self.besterror.name = err_lev
+        
         
         return(self.bestage)
     
@@ -158,8 +169,6 @@ class DZSample:
             bandwidth = botev.vermeesch_r(data_bw)
             bw_method = bandwidth/std
             
-            print(bandwidth,std,bw_method)
-            
         # Use Seaborn default
         else:
             bw_method = 'scott'
@@ -190,7 +199,36 @@ class DZSample:
         
         return(ax)
     
-    def kde_img(self,log_scale=True,add_n=True,method='botev_r',xlim=(10,4000),
+    def plot_agehf(self,hf_col,ax=None,**kwargs):
+        if ax == None:
+            ax = plt.gca()
+        
+        hf = self.agedata[hf_col].dropna(how='any')
+        ages = self.bestage[hf.index]
+        ax.scatter(ages,hf,**kwargs)
+        
+        return(ax)
+    
+    def kde_hf(self,hf_col,ax=None,include_ages=True,cmap='viridis',
+               marker_color='red',**kwargs):
+        if ax == None:
+            ax = plt.gca()
+        
+        hf = self.agedata[hf_col].dropna(how='any')
+        ages = self.bestage[hf.index]
+        
+        
+        sns.kdeplot(x=ages,y=hf,ax=ax,fill=True,cmap=cmap,
+                    **kwargs)
+        
+        ax.axhline(0,color='black')
+        
+        if include_ages==True:
+            self.plot_agehf(hf_col,ax=ax,color=marker_color,label=self.name)
+        
+        return(ax)
+    
+    def kde_img(self,log_scale=True,add_n=True,method='vermeesch',xlim=(10,4000),
                 **kwargs):
         """
         Save KDE as image file tied to dz object.
@@ -315,6 +353,58 @@ class DZSample:
             
             ax.set_xlim(0,3000)
             ax.set_ylim(0,1)
+        return
+    
+    def calc_mda(self,method='ygc2sig',grains=None,plot=True):
+        """
+        Calculate and plot maximum depositional age using selected grains
+        """
+        age_errors = pd.concat([self.bestage,self.besterror],axis=1)
+        ages_sorted = age_errors.sort_values(by=['Best Age'],ignore_index=True)
+        err_lev = self.error_level
+        
+        if method=='ygc2sig':
+            (self.mda,self.mda_err,self.mda_mswd,
+             self.mda_ages,self.mda_errors,self.mda_success) = mda.ygc2sig(ages_sorted,err_lev)
+            if self.mda_success==False:
+                print('3 grains at 2 sigma did not succeed. Trying 2 grains at 1 sigma')
+                method = 'ygc1sig'
+        
+        if method=='ygc1sig':
+            (self.mda,self.mda_err,self.mda_mswd,
+            self.mda_ages,self.mda_errors,self.mda_success) = mda.ygc1sig(ages_sorted,err_lev)  
+            
+        if method=='manual':
+            self.mda_ages = ages_sorted.loc[grains,'Best Age']
+    
+            self.mda_errors = ages_sorted.loc[grains,err_lev]
+            
+            weights = 1/self.mda_errors**2
+            
+            self.mda = np.average(self.mda_ages,weights=weights)
+            self.mda_err = 1/np.sqrt(np.sum(weights))
+            
+            deg_free = len(grains)-1
+            
+            if err_lev=='2sig':
+                errors_1sig = self.mda_errors/2
+            
+            elif err_lev =='1sig':
+                errors_1sig = self.mda_errors
+            
+            else:
+                raise('Error level not valid')
+            
+            squares_summed = np.sum(((self.mda_ages-self.mda)/errors_1sig)**2)
+            
+            self.mda_mswd = squares_summed/deg_free
+        
+        if plot==True:
+            fig,ax = plt.subplots(1,dpi=300)
+            mda.plot_weighted_mean(self.mda_ages,self.mda_errors,self.mda,
+                                   self.mda_err,self.mda_mswd,err_lev=err_lev,
+                                   ax=ax,label=self.name)
+        
         return
         
     def map_location(self,ax=None,crs=ccrs.PlateCarree(),**kwargs):
@@ -476,8 +566,6 @@ def load_all(path='dz/'):
     
     return(samples)
             
-    
-        
-            
+
             
         
