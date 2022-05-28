@@ -13,6 +13,7 @@ import geopandas as gpd
 import statsmodels.api as sm
 
 from matplotlib.colors import cnames
+from matplotlib import cm
 
 from geoscripts.dz import botev,mda
 
@@ -210,9 +211,12 @@ class DZSample:
         
         return(ax)
     
-    def kde_hf(self,hf_col,include_ages=True,cmap='viridis',method=None,
+    def kde_hf(self,hf_col,ax=None,include_ages=True,cmap='viridis',method=None,
                marker_color='red',xlim='auto',ylim='auto',**kwargs):
         
+        if ax is None:
+            ax=plt.gca()
+
         hf = self.agedata[hf_col].dropna(how='any')
         ages = self.bestage[hf.index]
 
@@ -230,6 +234,8 @@ class DZSample:
             # bw_method_hf = bw_hf/hf.std()
             print(bw_hf)
 
+            bw = [bw_ages,bw_hf]
+
         elif method=='botev_r':
             bw_ages = botev.botev_r(ages)
             # bw_method_ages = bw_ages/ages.std()
@@ -238,27 +244,50 @@ class DZSample:
             bw_hf = botev.botev_r(hf)
             # bw_method_hf = bw_hf/hf.std()
             print(bw_hf)
+
+            bw = [bw_ages,bw_hf]
         
         else:
-            bw_method_ages='scott'
-            bw_method_hf='scott'
+            bw = 'normal reference'
 
-        g = sns.JointGrid(x=ages,y=hf)
-        g = g.plot_joint(sns.kdeplot, cmap=cmap, fill=True,**kwargs)
-        sns.kdeplot(ages, bw_method=bw_method_ages, ax=g.ax_marg_x)
-        sns.kdeplot(hf, bw_method=bw_method_hf, ax=g.ax_marg_y)
+        # Get data into nx2 matrix
+        
+        data = np.vstack([ages,hf]).T
 
-        g.ax_marg_x.remove()
-        g.ax_marg_y.remove()
+        # Get multivariate estimator from calculated bandwidth
+        kde = sm.nonparametric.KDEMultivariate(data=data, var_type='cc', bw=bw)
         
-        g.ax_joint.axhline(0,color='black')
-        g.ax_joint.set_xlim(xlim)
-        g.ax_joint.set_ylim(ylim)
+        # Define grid and estimate density throughout grid
+        xgrid = np.linspace(xlim[0],xlim[1],200)
+        ygrid = np.linspace(ylim[0],ylim[1],200)
         
+        xx,yy = np.meshgrid(xgrid,ygrid)
+
+        # Need to convert meshgrid output into array of coordinates (mx2 where m is number of points)
+        coords = np.append(xx.reshape(-1,1), yy.reshape(-1,1),axis=1)
+
+        # Evaluate density at each coordinate
+        z_coord = kde.pdf(coords)
+
+        # Reshape z for use with imshow
+        z = z_coord.reshape(len(ygrid), len(xgrid))
+
+        #Normalize values
+        z_norm = z/np.max(z)
+
+        #ax.contourf(xgrid,ygrid,z,cmap=cmap,**kwargs)
+        cmap = cm.get_cmap(cmap).copy()
+        cmap.set_under(color='white')
+
+        ax.imshow(z_norm, cmap=cmap,extent=[xlim[0],xlim[1],ylim[0],ylim[1]],aspect='auto',origin='lower',**kwargs)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
         if include_ages==True:
-            self.plot_agehf(hf_col,ax=g.ax_joint,color=marker_color,label=self.name)
+            self.plot_agehf(hf_col,ax=ax,color=marker_color,label=self.name)
         
-        return(g.ax_joint)
+        return(ax)
     
     def kde_img(self,log_scale=True,add_n=True,method='vermeesch',xlim=(10,4000),
                 **kwargs):
