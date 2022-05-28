@@ -10,6 +10,7 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import pandas as pd
 import geopandas as gpd
+import statsmodels.api as sm
 
 from matplotlib.colors import cnames
 
@@ -209,24 +210,55 @@ class DZSample:
         
         return(ax)
     
-    def kde_hf(self,hf_col,ax=None,include_ages=True,cmap='viridis',
-               marker_color='red',**kwargs):
-        if ax == None:
-            ax = plt.gca()
+    def kde_hf(self,hf_col,include_ages=True,cmap='viridis',method=None,
+               marker_color='red',xlim='auto',ylim='auto',**kwargs):
         
         hf = self.agedata[hf_col].dropna(how='any')
         ages = self.bestage[hf.index]
+
+        if xlim=='auto':
+            xlim = (np.min(ages),np.max(ages))
+        if ylim=='auto':
+            ylim = (np.min(hf),np.max(hf))
+
+        if method=='vermeesch':
+            bw_ages = botev.vermeesch_r(ages)
+            # bw_method_ages = bw_ages/ages.std()
+            print(bw_ages)
+
+            bw_hf = botev.vermeesch_r(hf)
+            # bw_method_hf = bw_hf/hf.std()
+            print(bw_hf)
+
+        elif method=='botev_r':
+            bw_ages = botev.botev_r(ages)
+            # bw_method_ages = bw_ages/ages.std()
+            print(bw_ages)
+
+            bw_hf = botev.botev_r(hf)
+            # bw_method_hf = bw_hf/hf.std()
+            print(bw_hf)
         
+        else:
+            bw_method_ages='scott'
+            bw_method_hf='scott'
+
+        g = sns.JointGrid(x=ages,y=hf)
+        g = g.plot_joint(sns.kdeplot, cmap=cmap, fill=True,**kwargs)
+        sns.kdeplot(ages, bw_method=bw_method_ages, ax=g.ax_marg_x)
+        sns.kdeplot(hf, bw_method=bw_method_hf, ax=g.ax_marg_y)
+
+        g.ax_marg_x.remove()
+        g.ax_marg_y.remove()
         
-        sns.kdeplot(x=ages,y=hf,ax=ax,fill=True,cmap=cmap,
-                    **kwargs)
-        
-        ax.axhline(0,color='black')
+        g.ax_joint.axhline(0,color='black')
+        g.ax_joint.set_xlim(xlim)
+        g.ax_joint.set_ylim(ylim)
         
         if include_ages==True:
-            self.plot_agehf(hf_col,ax=ax,color=marker_color,label=self.name)
+            self.plot_agehf(hf_col,ax=g.ax_joint,color=marker_color,label=self.name)
         
-        return(ax)
+        return(g.ax_joint)
     
     def kde_img(self,log_scale=True,add_n=True,method='vermeesch',xlim=(10,4000),
                 **kwargs):
