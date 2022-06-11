@@ -182,9 +182,9 @@ class DZSample:
                     ax=ax,shade=True,color=self.color,gridsize=1000,
                     bw_method=bw_method,**kwargs)
         if rug == True:
-            sns.rugplot(self.bestage,ax=ax,height=-0.05,clip_on=False,
+            sns.rugplot(self.bestage,ax=ax,height=-0.03,clip_on=False,
                         color=self.color,expand_margins=False,
-                        linewidth=2)
+                        linewidth=1)
         
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
