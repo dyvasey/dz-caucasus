@@ -427,7 +427,7 @@ class DZSample:
             ax.set_ylim(0,1)
         return
     
-    def calc_mda(self,method='ygc2sig',grains=None,plot=True):
+    def calc_mda(self,method='ygc2sig',grains=None,plot=True,overdisperse=False):
         """
         Calculate and plot maximum depositional age using selected grains
         """
@@ -470,6 +470,10 @@ class DZSample:
             squares_summed = np.sum(((self.mda_ages-self.mda)/errors_1sig)**2)
             
             self.mda_mswd = squares_summed/deg_free
+
+        if overdisperse==True:
+            print('Using overdispersion factor, original error: ',self.mda_err)
+            self.mda_err = self.mda_err*np.sqrt(self.mda_mswd)
         
         if plot==True:
             fig,ax = plt.subplots(1,dpi=300)
