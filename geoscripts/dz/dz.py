@@ -479,6 +479,13 @@ class DZSample:
         
         return(self.mda,self.mda_err,self.mda_ages,self.mda_errors)
         
+    def plot_mda(self,ax=None):
+        mda.plot_weighted_mean(self.mda_ages,self.mda_errors,self.mda,
+                        self.mda_err,self.mda_mswd,err_lev=self.error_level,
+                        ax=ax,label=self.name)
+    
+        return(ax)
+    
     def map_location(self,ax=None,crs=ccrs.PlateCarree(),**kwargs):
         """
         Add sample location to map with Cartopy.

@@ -41,7 +41,7 @@ def plot_weighted_mean(ages,errors,mean,mean_error,mswd,err_lev='2sig',ax=None,
     
     x = np.arange(len(ages)).astype(str)
     ax.errorbar(x,ages,yerr=errors,fmt='none',
-                linewidth=10,**kwargs)
+                linewidth=5,**kwargs)
     ax.axhline(mean,color='black',linewidth=1)
     ax.axhspan(ymin=mean-mean_error,ymax=mean+mean_error,
                color='grey',alpha=0.5)
@@ -52,8 +52,10 @@ def plot_weighted_mean(ages,errors,mean,mean_error,mswd,err_lev='2sig',ax=None,
         + ' Ma ' + err_lev + '\nMSWD: ' + str(round(mswd,1))
         )
     
-    ax.annotate(annotation,xy=(0.6,0.15),xycoords='axes fraction')
+    ax.annotate(annotation,xy=(0.55,0.05),xycoords='axes fraction',fontsize=6)
     ax.set_ylabel('Age (Ma)')
+
+    ax.xaxis.set_ticklabels([])
     
     return(ax)
     
