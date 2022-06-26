@@ -493,6 +493,18 @@ class DZSample:
         
         return(self.mda,self.mda_err,self.mda_ages,self.mda_errors)
         
+    def convert_1sigto2sig(self):
+        if self.error_level=='2sig':
+            print('Errors already at 2sig')
+        elif self.error_level=='1sig':
+            print('Converting...')
+            self.besterror = self.besterror*2
+            self.error_level='2sig'
+            self.besterror.name = self.error_level
+        else:
+            print('Something went wrong')
+        return
+    
     def plot_mda(self,ax=None,syst_error=False):
         
         if syst_error==False:
