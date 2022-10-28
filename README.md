@@ -10,8 +10,8 @@ The code is primarily housed with Jupyter Notebooks, which are intended to be ru
 
 1. Run `process_caucasus.ipynb` and `process_eecgond.ipynb`. These do some initial data processing needed for the other notebooks.
 2. Run `figs.ipynb` to see the bulk of main text detrital zircon figures included in Vasey et al. (in prep).
-3. Run `hf.ipynb` to see construction of Figure 5 in Vasey et al. (in prep)
-4. Run `supp.ipynb` to see construction of supplementary figures in Vasey et al. (in prep)
+3. Run `hf.ipynb` to see construction of Figure 5 in Vasey et al. (in prep).
+4. Run `supp.ipynb` to see construction of supplementary figures in Vasey et al. (in prep).
 5. Run `supp_tables.ipynb` to see construction of supplementary tables in Vasey et al. (in prep).
 
 ## References

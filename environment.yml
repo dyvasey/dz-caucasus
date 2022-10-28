@@ -11,4 +11,4 @@ dependencies:
   - seaborn
   - numpy
   - openpyxl
-  - rpy2
+  - xlrd
