@@ -1,14 +1,10 @@
-name: dz
+name: dz-caucasus
 channels:
+  - davasey
   - conda-forge
 dependencies:
-  - python=3.10.4
-  - matplotlib
-  - jupyter
-  - geopandas
-  - pandas=1.4.2
-  - cartopy
-  - seaborn
-  - numpy
+  - python=3.10
+  - geoscripts
   - openpyxl
   - xlrd
+  - ipykernel
