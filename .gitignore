@@ -10,5 +10,6 @@ __pycache__
 dz/
 catchments/
 modern_samples.csv
+table.csv
 ~$*
 !geoscripts/dz

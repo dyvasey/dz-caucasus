@@ -1,16 +1,10 @@
-name: dz-leslie
+name: dz-caucasus
 channels:
+  - davasey
   - conda-forge
-  - defaults
 dependencies:
-  - matplotlib
-  - jupyter
-  - geopandas
-  - pandas
-  - spyder
-  - cartopy
-  - seaborn
-  - numpy
+  - python=3.10
+  - geoscripts
   - openpyxl
-  - rpy2
-prefix: C:\Users\dyvas\miniconda3\envs\dz-leslie
+  - xlrd
+  - ipykernel
