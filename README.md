@@ -17,10 +17,6 @@ The code is primarily housed with Jupyter Notebooks, which are intended to be ru
 ## References
 Vasey, D.A., Garcia, L., Cowgill, E., and Godoladze, T., in prep., Episodic evolution of a protracted convergent margin revealed by detrital zircon geochronology in the Greater Caucasus: _Solid Earth_.
 
-## For Development Only
-
-Clean branch: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/dyvasey/dz-caucasus/clean)
-
 
 
 
