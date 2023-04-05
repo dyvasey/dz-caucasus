@@ -8,3 +8,6 @@ dependencies:
   - openpyxl
   - xlrd
   - ipykernel
+  - jupyter
+  - r-irkernel
+  - r-isoplotr=5.2
