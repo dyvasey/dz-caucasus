@@ -4,6 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10
+  - pandas=1.5.1
   - geoscripts
   - openpyxl
   - xlrd
