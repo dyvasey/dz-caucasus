@@ -14,4 +14,4 @@ modern_samples.csv
 table.csv
 ~$*
 !geoscripts/dz
-data_processing/proc*
+data_processing/*/
