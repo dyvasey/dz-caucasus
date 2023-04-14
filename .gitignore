@@ -15,3 +15,4 @@ table.csv
 ~$*
 !geoscripts/dz
 data_processing/*/
+data_processing/*.csv
