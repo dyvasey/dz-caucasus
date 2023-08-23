@@ -12,6 +12,7 @@ catchments/
 isoplot/
 modern_samples.csv
 table.csv
+mda_comparisons.csv
 ~$*
 !geoscripts/dz
 data_processing/*/
